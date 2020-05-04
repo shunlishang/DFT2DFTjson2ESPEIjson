@@ -2,11 +2,13 @@
 Thermochemical properties from DFT data to DFT json files to ESPEI json files
 
 Before start: 
+
 0: You need a sublattice model for CALPHAD modeling later 
 
 1: You need a "phase_name" file in each folder, includling the following contents (only the first line is important, others are comments)
 
 C14_194
+
 ENDMEMBER
 
 2. You need a yaml file "sub_conf_occ.yaml" to describe elements and their compositions in each sublattice, such as:  
