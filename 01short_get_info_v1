@@ -1,0 +1,133 @@
+#!/bin/bash
+export _POSIX2_VERSION=199209
+echo
+matlab_folder='mtlab'
+volume0='V1.000'
+ishort=1   ## > 0: only a few info will be collected, otherwise more info 
+################ 
+
+
+## 1a =====: to prepare phase name AND to generate a new vasp_info file 
+  if [ -f "phase_name" ]; then
+        echo 'phase_name_start'        >  vasp_info
+	    cat   phase_name | grep -v SER_   >>  vasp_info 
+  else	
+	echo 'phase_name_start '    > vasp_info
+	echo 'unknown_phase'       >> vasp_info 
+  fi 	
+echo 'phase_name_end' >> vasp_info
+echo                  >> vasp_info
+
+## 1b =====: to set SER reference 
+  if [ -f "phase_name" ]; then
+        echo 'SER_ref_start'   >>  vasp_info
+	    aa=`cat   phase_name | grep SER_ | wc -l`
+		echo $aa
+		if [ $aa -gt 0 ]; then 
+		    echo 'Yes'       >> vasp_info
+	    else	
+            echo 'No'        >> vasp_info		
+		fi 
+  else	
+	echo 'SER_ref_start '    >> vasp_info
+	echo 'No'       >> vasp_info 
+  fi 	
+echo 'SER_ref_end' >> vasp_info
+echo               >> vasp_info
+
+## 2 =====: to prepare wyccar 
+if [ $ishort -lt 0 ]; then 
+if [ ! -f 'wyccar' ]; then
+  echo ' To generate wyccar by aflow ...'	
+  aflow --wyccar  <  ./$volume0/CONTCAR     > wyccar 
+fi
+fi 
+##----
+if [ -f "wyccar" ]; then  
+echo 'wyccar_start' >>  vasp_info
+cat wyccar          >>  vasp_info
+echo 'wyccar_end'   >>  vasp_info
+echo                >> vasp_info
+fi 
+
+
+## 3 =====: copy 2 lines in contcar
+echo 'contcar_start'                       >> vasp_info
+  head -n 7 ./$volume0/CONTCAR | tail -n 2 >> vasp_info
+echo 'contcar_end'                         >> vasp_info 
+echo                                       >> vasp_info
+
+## 4 =====: get POTCAR information 
+if [ $ishort -lt 0 ]; then    ## if < 0: for more info
+echo 'potcar_start'                 >> vasp_info
+if [ -f "./$volume0/POTCAR" ]; then
+  grep TITEL ./$volume0/POTCAR      >>  vasp_info
+fi 
+if [ ! -f "./$volume0/POTCAR" ] & [ -f "./$volume0/POTCAR.list" ]; then
+  grep TITEL ./vol_1.00/POTCAR.list >> vasp_info
+fi 
+echo 'potcar_end'     >> vasp_info
+echo                  >> vasp_info
+fi 
+
+## 5 ====: get properties at 0 k from ./mtlab or ./matlabRX  
+echo 'eos_0k_start'  >> vasp_info
+
+if [ -f "./TC/input_zero.m" ]; then
+  tail -n 3 ./TC/input_zero.m | head -n 1 >> vasp_info
+else
+  echo 'matlab folder =', $matlab_folder 
+   cd $volume0
+     atot=` tail +7 CONTCAR | head -n 1 | awk '{sum=0; for(i=1; i<=NF; i++){sum+=$i}; print sum}' `
+   cd ..
+  echo 'Total number of atoms in CONTCAR = ' $atot
+  echo
+  grep 3.000000 ./$matlab_folder/out_eosres | head -n 1 | awk '{print  $2/'$atot', $3/'$atot', $4, $5, $6, 1, 1}' >> vasp_info 
+fi  
+echo 'eos_0k_end' >> vasp_info 
+echo              >> vasp_info
+
+## 6 ===: get QHA_info from ./TC 
+if [ -f "./TC/property_eachj" ]; then
+ cat ./TC/property_eachj | awk '{printf "%.7e, ", $1}'      | awk '{print substr($0, 1, length($0)-2)}' > temp.t  
+ cat ./TC/property_eachj | awk '{printf "%.7e, ", $4*1000}' | awk '{print substr($0, 1, length($0)-2)}' > temp.h  
+ cat ./TC/property_eachj | awk '{printf "%.7e, ", $5}'      | awk '{print substr($0, 1, length($0)-2)}' > temp.s  
+ cat ./TC/property_eachj | awk '{printf "%.7e, ", $9}'      | awk '{print substr($0, 1, length($0)-2)}' > temp.cp  
+fi	
+
+## 7 ===: get the PATH 
+echo 'path_atom_start' >> vasp_info
+ pwd                                     >> vasp_info
+ if [ -d "./TC" ]; then
+   grep ntot ./TC/run_post.m | head -n 1 >> vasp_info
+ fi 
+echo 'path_atom_end'   >> vasp_info
+echo                   >> vasp_info
+
+## 8 ===: from INCAR
+if [ $ishort -lt 0 ]; then  ## if < 0: for more info
+echo 'incar_start' >> vasp_info
+grep ISMEAR ./$volume0/INCAR >> vasp_info
+grep ENCUT  ./$volume0/INCAR >> vasp_info
+grep NEDOS  ./$volume0/INCAR >> vasp_info
+echo 'incar_end'   >> vasp_info
+echo               >> vasp_info
+fi
+
+## 9  ===: from KPOINTS NOT for short 
+if [ $ishort -lt 0 ]; then ## if < 0: for more info
+echo 'kpoints_start' >> vasp_info
+  head -n 4 ./$volume0/KPOINTS | tail -n 2 >> vasp_info
+echo 'kpoints_end'   >> vasp_info
+echo                 >> vasp_info
+fi
+
+## 10 ===: write note
+echo 'note_start' >> vasp_info
+echo 'SG and wyckoff sites from aflow --wyccar < CONTCAR' >> vasp_info
+echo 'note_end'    >> vasp_info
+echo               >> vasp_info
+
+###
+echo '### The End ###'
+
