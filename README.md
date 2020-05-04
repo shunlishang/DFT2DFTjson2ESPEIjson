@@ -18,6 +18,7 @@ ENDMEMBER
 sub_configurations: ## List the elements in each sublattice, one indicates fully occupied, "list" is for interaction case 
   - Hf
   - [Cr, Hf]  
+  
 sub_occupancies:    ## mole fraction. If not a list, the code will not ignore it, so, you can put any value
   - 1
   - [0.25, 0.75]
