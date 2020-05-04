@@ -5,6 +5,7 @@ Before start:
 0: You need a sublattice model for CALPHAD modeling later 
 
 1: You need a "phase_name" file in each folder, includling the following contents (only the first line is important, others are comments)
+
 C14_194
 ENDMEMBER
 
