@@ -19,6 +19,9 @@ sub_occupancies:    ## mole fraction. If not a list, the code will not ignore it
 ==========
 
 After DFT calculations, use the following three code get DFTjson and ESPEIjson files:
+
 "01short_get_info_v1" is a Linux script to prepare input file, the output file is "vasp_info" to be read by python file.
+
 "02DFTdata2_JSON_v2.py" is a python code to convert DFT data to DFTjson file. 
+
 "0303JSON2_espei_JSON_v3.py" is a python code to convert DFTjson file to ESPEIjson file.
